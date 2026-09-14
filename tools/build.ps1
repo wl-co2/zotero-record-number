@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 $addon = Join-Path $SourceRoot "addon"
 $dist = Join-Path $SourceRoot "dist"
-$destination = Join-Path $dist "zotero-record-number-1.0.3.xpi"
+$destination = Join-Path $dist "zotero-record-number-1.0.4.xpi"
 
 & (Join-Path $PSScriptRoot "verify.ps1") -SourceRoot $SourceRoot
 

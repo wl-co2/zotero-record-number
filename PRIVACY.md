@@ -39,7 +39,8 @@ Zotero 7.0.15 的安装器强制要求非空 `update_url`。清单使用 `https:
 - 编号解析、追加、缺失、无效与重复检测测试：通过。
 - 模拟 Zotero API 的初始化、列显示、连续发号和删除后不复用测试：通过。
 - Zotero 原生进度窗口的数量、总数和百分比更新测试：通过。
+- Zotero 10.0.2 使用的列注册、刷新、通知、进度窗口及脚本加载接口检查：通过。
 - XPI 静态扫描：未发现网络 API、遥测、授权、PDF 或图像处理代码；清单中唯一 URL 是 GitHub `updates.json`。
 - XPI 实际内容：`bootstrap.js`、`manifest.json`、`prefs.js`、`record-number-core.js`，共 4 个文件。
-- XPI 大小：5733 字节。
-- SHA-256：`67A5D313941EAFCAC114A870E3CD4CB872DB18870CFDD61B74A57F62034C6AB8`。
+- XPI 大小：5735 字节。
+- SHA-256：`0F6FDADA60ACD3B4AAC44BDCFB548A1067933F6220279B7B9E81F05B0254C21A`。

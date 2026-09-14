@@ -1,6 +1,6 @@
 # Zotero Record Number
 
-一个仅实现稳定文献编号的 Zotero 插件，适用于 Zotero 7–9。
+一个仅实现稳定文献编号的 Zotero 插件，适用于 Zotero 7–10。
 
 ## 行为
 

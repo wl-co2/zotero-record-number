@@ -32,6 +32,15 @@ $manifest = Get-Content -Raw -LiteralPath (Join-Path $addon "manifest.json") |
 if ($manifest.applications.zotero.id -ne "zotero-record-number@wl-co2.github.io") {
   throw "Unexpected plugin ID"
 }
+if ($manifest.version -ne "1.0.4") {
+  throw "Unexpected plugin version"
+}
+if (
+  $manifest.applications.zotero.strict_min_version -ne "7.0" -or
+  $manifest.applications.zotero.strict_max_version -ne "10.0.*"
+) {
+  throw "Unexpected Zotero compatibility range"
+}
 $expectedUpdateURL = "https://raw.githubusercontent.com/wl-co2/zotero-record-number/main/updates.json"
 if ($manifest.applications.zotero.update_url -ne $expectedUpdateURL) {
   throw "Unexpected manifest update URL"

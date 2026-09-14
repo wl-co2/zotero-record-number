@@ -4,7 +4,7 @@
 
 1. 在 Zotero 中打开“工具 → 插件”（部分版本显示为“附加组件”）。
 2. 点击齿轮菜单，选择“Install Add-on From File…”／“从文件安装插件”。
-3. 选择 `dist\zotero-record-number-1.0.3.xpi`。
+3. 选择 `dist\zotero-record-number-1.0.4.xpi`。
 4. 如果 Zotero 要求重启，请重启。
 5. 文献列表未自动显示时，在列表表头上右键并勾选 `Record Number`。
 
