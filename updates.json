@@ -1,0 +1,19 @@
+{
+  "addons": {
+    "zotero-record-number@wl-co2.github.io": {
+      "updates": [
+        {
+          "version": "1.0.3",
+          "update_link": "https://raw.githubusercontent.com/wl-co2/zotero-record-number/main/dist/zotero-record-number-1.0.3.xpi",
+          "update_hash": "sha256:67a5d313941eafcac114a870e3cd4cb872db18870cfdd61b74a57f62034c6ab8",
+          "applications": {
+            "zotero": {
+              "strict_min_version": "7.0",
+              "strict_max_version": "9.0.*"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
