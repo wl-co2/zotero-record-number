@@ -1,1 +1,6 @@
-dist/archive/
+node_modules/
+.env
+.scaffold/
+.test-build/
+*.log
+*.tmp

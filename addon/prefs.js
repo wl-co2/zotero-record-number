@@ -1,2 +1,3 @@
-pref("extensions.zotero.record-number.autoEnabled", false);
-pref("extensions.zotero.record-number.highWater", "0");
+/* eslint-disable no-undef */
+pref("autoAssign", false);
+pref("lastNumber", 0);

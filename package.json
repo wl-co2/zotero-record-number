@@ -1,0 +1,30 @@
+{
+  "name": "zotero-record-number",
+  "version": "1.0.5",
+  "private": true,
+  "type": "module",
+  "description": "Offline EndNote-style persistent record numbers for Zotero",
+  "config": {
+    "addonName": "Zotero Record Number",
+    "addonID": "zotero-record-number@wl-co2.github.io",
+    "addonRef": "zotero-record-number",
+    "addonInstance": "ZoteroRecordNumber",
+    "prefsPrefix": "extensions.zotero.zotero-record-number"
+  },
+  "author": "Private local build derived from Zotero One",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wl-co2/zotero-record-number.git"
+  },
+  "scripts": {
+    "build": "zotero-plugin build && tsc --noEmit",
+    "test": "tsc -p tsconfig.test.json && node --test .test-build/test/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.19",
+    "typescript": "^5.8.3",
+    "zotero-plugin-scaffold": "^0.8.6",
+    "zotero-types": "^4.0.0-beta.10"
+  }
+}

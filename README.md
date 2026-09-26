@@ -1,44 +1,67 @@
 # Zotero Record Number
 
-一个仅实现稳定文献编号的 Zotero 插件，适用于 Zotero 7–10。
+Version 1.0.5 supports Zotero 7.0 through Zotero 10.0.x.
 
-## 行为
+A small, offline Zotero plugin that provides EndNote-style persistent record
+numbers for top-level bibliographic items in **My Library**.
 
-- 只为“我的文库”（My Library）中的普通文献编号。
-- 所有分类共用同一套编号；移动、排序或加入多个分类不会改变编号。
-- 编号以 `Record Number: 31` 的形式写入文献的 `Extra` 字段。
-- 删除文献后不补号。下一个号码始终大于本机已经发放过的最大号码。
-- 已有编号不会被自动覆盖；无效编号和重复编号只报告、不擅自修复。
-- 自动发号是本机设置，默认关闭。只能在一台主电脑上启用。
-- 其他电脑可安装本插件显示随 Zotero 元数据同步而来的编号，但应保持自动发号关闭。
-- 首次启用自动发号和手动补发时显示处理数量、总数及百分比；后台单篇自动发号不弹窗。
+## Behavior
 
-## 隐私与依赖
+- Stores the value in the item's Extra field as `Record Number: 31`.
+- Existing numbers never change because of sorting, filtering, collections, or
+  deletion of another item.
+- New numbers use the highest number ever seen by this installation plus one.
+- Deleted numbers are not intentionally reused.
+- Attachments and notes do not receive their own numbers.
+- Collections share one sequence because they contain references to items in
+  My Library rather than separate copies.
+- Group libraries are deliberately not numbered in this private build.
 
-- 无第三方运行依赖。
-- 插件代码不包含网络请求、遥测、分析、账号、授权、PDF 或图像处理逻辑。
-- Zotero 只通过 GitHub 读取本插件的 `updates.json` 并在有新版时下载 XPI；插件代码本身不发送网络请求，也不会上传文献或使用数据。
-- 插件只读取“我的文库”的条目字段，并仅在需要发号时修改 `Extra`。
-- 若 Zotero 自身已开启同步，`Extra` 中的编号会由 Zotero 同步；这不是插件代码发起的网络请求。
-- GitHub 会获得普通 HTTPS 请求必然包含的 IP、时间和 User-Agent 等连接信息，但不会收到题录、PDF、编号或遥测内容。
+## Safe multi-computer use
 
-## 源码结构
+The Record Number is item metadata, so Zotero data sync can carry the value to
+other computers. Install the plugin on another computer if you want the custom
+column there, but enable automatic assignment on **one computer only**.
 
-- `addon/`：最终打入 XPI 的全部文件。
-- `tests/core.test.js`：编号解析与检查逻辑测试。
-- `tools/verify.ps1`：隐私及包内容静态检查。
-- `tools/build.ps1`：不依赖 Node/npm 的 XPI 构建脚本。
+On secondary computers, leave **Tools → Record Number → Automatically assign
+new numbers on this computer** unchecked. New unnumbered items added elsewhere
+will receive numbers after they reach the designated numbering computer via
+Zotero sync.
 
-## 构建
+## Initial setup
 
-在 PowerShell 中运行：
+1. Back up the Zotero data directory.
+2. Install the XPI from **Tools → Plugins → gear → Install Plugin From File**.
+3. Open **Tools → Record Number**.
+4. Run **Assign numbers to existing unnumbered items…** once.
+5. On the one primary computer, enable automatic assignment.
+6. Run **Check record numbers…** to verify the library.
 
-```powershell
-.\tools\build.ps1
+## Privacy
+
+The runtime plugin contains no network requests, telemetry, accounts, license
+checks, or remote services. The manifest points Zotero's standard plugin update
+checker to the `updates.json` file in the `wl-co2/zotero-record-number` GitHub
+repository. GitHub receives normal HTTPS connection metadata such as the IP
+address, time, and User-Agent, but no bibliographic metadata, PDF, Record
+Number, or usage telemetry. The plugin reads local Zotero item metadata and
+writes only a `Record Number` line in Extra. If Zotero data sync is enabled,
+Zotero itself syncs that metadata; this plugin does not contact the Zotero
+server directly.
+
+## Build
+
+```text
+npm install
+npm test
+npm run build
 ```
 
-脚本使用 Windows 自带的 .NET ZIP 功能，产物写入插件目录内的 `dist` 目录。
+The XPI is produced under `.scaffold/build/`.
 
-## 已知边界
+## Origin and license
 
-发号上限保存在主电脑的本地 Zotero 偏好中。更换主电脑时，插件会从当前文库的最大有效编号继续；如果原主电脑已删除恰好位于编号末尾的文献，新电脑无法从同步后的剩余条目推断那些已删除号码。因此，不建议随意更换发号主电脑。
+This private build was developed after reviewing the Zotero One item-column
+implementation and its Zotero plugin scaffold. The numbering logic was
+rewritten to persist values instead of recalculating row positions. See
+`NOTICE.md` for attribution. Distributed under AGPL-3.0-or-later.

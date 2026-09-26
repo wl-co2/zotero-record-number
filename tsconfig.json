@@ -1,0 +1,5 @@
+{
+  "extends": "zotero-types/entries/sandbox/",
+  "include": ["src", "typings"],
+  "exclude": [".scaffold", ".test-build", "addon", "node_modules"]
+}
