@@ -8,7 +8,6 @@ declare namespace _ZoteroTypes {
   interface Prefs {
     PluginPrefsMap: {
       "autoAssign": boolean;
-      "lastNumber": number;
     };
   }
 }

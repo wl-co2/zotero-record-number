@@ -1,9 +1,9 @@
 {
   "name": "zotero-record-number",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "private": true,
   "type": "module",
-  "description": "Offline EndNote-style persistent record numbers for Zotero",
+  "description": "Offline sequential record numbers for Zotero",
   "config": {
     "addonName": "Zotero Record Number",
     "addonID": "zotero-record-number@wl-co2.github.io",

@@ -1,11 +1,13 @@
 # Installation
 
-1. Download `dist/zotero-record-number-1.0.5.xpi`.
+1. Download `dist/zotero-record-number-1.0.6.xpi`.
 2. In Zotero 7, open **Tools → Plugins**.
 3. Open the gear menu and choose **Install Plugin From File...**.
 4. Select the downloaded XPI and restart Zotero if prompted.
 
 For an existing library, first run **Tools → Record Number → Initialize Missing Record Numbers** on one primary computer, then run **Check Record Numbers**. Keep automatic assignment enabled on only one computer to avoid concurrent number allocation.
+
+New items use the smallest available number. Items in the trash retain their numbers until the trash is emptied. To compact every remaining item to `1…N`, empty the trash and run **Tools → Record Number → Renumber all items consecutively…**. This operation can change existing Record Numbers.
 
 The add-on stores the number in each item's `Extra` field so Zotero sync carries it with the item. Uninstalling the add-on does not remove those values.
 

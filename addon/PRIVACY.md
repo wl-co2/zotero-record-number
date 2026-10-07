@@ -14,8 +14,8 @@ It does not contain or perform:
 
 It reads top-level bibliographic metadata in the local Zotero **My Library**
 database. When instructed, it writes a line such as `Record Number: 31` to the
-item's Extra field. Its two local preferences are whether this computer may
-assign numbers and the locally observed high-water number.
+item's Extra field. Its local preference records whether this computer may
+assign numbers.
 
 Zotero's own data-sync feature may synchronize the modified item metadata if
 the user has enabled Zotero syncing. That synchronization is performed by

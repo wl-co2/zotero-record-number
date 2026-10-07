@@ -3,9 +3,9 @@
     "zotero-record-number@wl-co2.github.io": {
       "updates": [
         {
-          "version": "1.0.5",
-          "update_link": "https://raw.githubusercontent.com/wl-co2/zotero-record-number/main/dist/zotero-record-number-1.0.5.xpi",
-          "update_hash": "sha256:b376b8d7ed598169202a7f429b8586ebe216e280d45482aefc35f205e330c2d2",
+          "version": "1.0.6",
+          "update_link": "https://raw.githubusercontent.com/wl-co2/zotero-record-number/main/dist/zotero-record-number-1.0.6.xpi",
+          "update_hash": "sha256:e10ac4fd985ca41a78d6e7b8344eb888bb7c45291e4aae8d10aafe5ea15599eb",
           "applications": {
             "zotero": {
               "strict_min_version": "7.0",

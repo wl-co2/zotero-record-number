@@ -12,8 +12,9 @@ The custom item-column registration and bootstrapped-plugin layout were based
 on the upstream approach. The implementation was reduced to a single-purpose,
 offline plugin. Dynamic row numbering, PDF preview, image extraction, Pro
 gating, license settings, bundled PDF/image libraries, automatic-update URLs,
-and other unrelated features were not included. Persistent numbering, Extra
-field storage, validation, one-computer assignment controls, and privacy
-documentation were newly implemented for this build.
+and other unrelated features were not included. Stored numbering, optional
+consecutive renumbering, Extra field storage, validation, one-computer
+assignment controls, and privacy documentation were implemented for this
+build.
 
 This modified work is distributed under AGPL-3.0-or-later. See `LICENSE`.

@@ -2,11 +2,11 @@ import { config } from "../package.json";
 import {
   inspectRecordNumber,
   recordNumberSortKey,
+  smallestAvailableRecordNumber,
   withRecordNumber,
 } from "./recordNumberField";
 
 const AUTO_ASSIGN_PREF = `${config.prefsPrefix}.autoAssign`;
-const LAST_NUMBER_PREF = `${config.prefsPrefix}.lastNumber`;
 const SAVE_BATCH_SIZE = 250;
 
 export interface DuplicateRecordNumber {
@@ -34,10 +34,20 @@ export interface AssignmentResult {
   lastNumber: number | null;
 }
 
+export interface RenumberPreview {
+  total: number;
+  changed: number;
+  trashCount: number;
+}
+
+export interface RenumberResult {
+  total: number;
+  changed: number;
+}
+
 export class RecordNumberManager {
   private observerID?: string;
   private registeredColumnKey?: string;
-  private cachedHighWater?: number;
   private workQueue: Promise<unknown> = Promise.resolve();
 
   async start(): Promise<void> {
@@ -79,11 +89,6 @@ export class RecordNumberManager {
     Zotero.Prefs.set(AUTO_ASSIGN_PREF, enabled, true);
   }
 
-  async refreshHighWaterMark(): Promise<number> {
-    this.cachedHighWater = undefined;
-    return this.getHighWaterMark();
-  }
-
   async getValidationReport(): Promise<ValidationReport> {
     const items = await this.getPersonalLibraryItems(false);
     return this.analyze(items);
@@ -91,8 +96,11 @@ export class RecordNumberManager {
 
   async getInitializationPreview(): Promise<InitializationPreview> {
     const report = await this.getValidationReport();
-    const highWater = await this.getHighWaterMark();
-    return { report, nextNumber: highWater + 1 };
+    const usedNumbers = await this.getUsedRecordNumbers(true);
+    return {
+      report,
+      nextNumber: smallestAvailableRecordNumber(usedNumbers),
+    };
   }
 
   async initializeMissingNumbers(): Promise<AssignmentResult> {
@@ -105,6 +113,60 @@ export class RecordNumberManager {
         )
         .sort(compareByDateAddedThenID);
       return this.assignItems(missing);
+    });
+  }
+
+  async getRenumberPreview(): Promise<RenumberPreview> {
+    const allItems = await this.getPersonalLibraryItems(true);
+    const trashCount = allItems.filter((item) => item.deleted).length;
+    const activeItems = allItems
+      .filter((item) => !item.deleted)
+      .sort(compareForRenumbering);
+    return {
+      total: activeItems.length,
+      changed: countRenumberChanges(activeItems),
+      trashCount,
+    };
+  }
+
+  async renumberAllItems(): Promise<RenumberResult> {
+    return this.enqueue(async () => {
+      const allItems = await this.getPersonalLibraryItems(true);
+      const trashCount = allItems.filter((item) => item.deleted).length;
+      if (trashCount) {
+        throw new Error("Empty the Zotero trash before renumbering");
+      }
+
+      const items = allItems.sort(compareForRenumbering);
+      let changed = 0;
+
+      for (let offset = 0; offset < items.length; offset += SAVE_BATCH_SIZE) {
+        const batch = items.slice(offset, offset + SAVE_BATCH_SIZE);
+        await Zotero.DB.executeTransaction(async () => {
+          for (let index = 0; index < batch.length; index += 1) {
+            const item = batch[index];
+            const targetNumber = offset + index + 1;
+            const inspection = inspectRecordNumber(item.getField("extra"));
+            if (
+              inspection.status === "valid" &&
+              inspection.value === targetNumber
+            ) {
+              continue;
+            }
+
+            item.setField(
+              "extra",
+              withRecordNumber(item.getField("extra"), targetNumber),
+            );
+            await item.save({ skipDateModifiedUpdate: true });
+            changed += 1;
+          }
+        });
+        await Zotero.Promise.delay(0);
+      }
+
+      Zotero.ItemTreeManager.refreshColumns();
+      return { total: items.length, changed };
     });
   }
 
@@ -164,14 +226,14 @@ export class RecordNumberManager {
       return { assigned: 0, firstNumber: null, lastNumber: null };
     }
 
-    let nextNumber = (await this.getHighWaterMark()) + 1;
-    const firstNumber = nextNumber;
+    const usedNumbers = await this.getUsedRecordNumbers(true);
+    let nextNumber = smallestAvailableRecordNumber(usedNumbers);
+    let firstNumber: number | null = null;
+    let lastNumber: number | null = null;
     let assigned = 0;
 
     for (let offset = 0; offset < items.length; offset += SAVE_BATCH_SIZE) {
       const batch = items.slice(offset, offset + SAVE_BATCH_SIZE);
-      let batchLastNumber = nextNumber - 1;
-
       await Zotero.DB.executeTransaction(async () => {
         for (const item of batch) {
           if (!this.isEligible(item)) continue;
@@ -183,43 +245,35 @@ export class RecordNumberManager {
             withRecordNumber(item.getField("extra"), nextNumber),
           );
           await item.save({ skipDateModifiedUpdate: true });
-          batchLastNumber = nextNumber;
+          firstNumber ??= nextNumber;
+          lastNumber = nextNumber;
+          usedNumbers.add(nextNumber);
           nextNumber += 1;
+          while (usedNumbers.has(nextNumber)) nextNumber += 1;
           assigned += 1;
         }
       });
-
-      if (batchLastNumber >= firstNumber) {
-        this.rememberHighWaterMark(batchLastNumber);
-      }
       await Zotero.Promise.delay(0);
     }
 
     Zotero.ItemTreeManager.refreshColumns();
     return {
       assigned,
-      firstNumber: assigned ? firstNumber : null,
-      lastNumber: assigned ? nextNumber - 1 : null,
+      firstNumber,
+      lastNumber,
     };
   }
 
-  private async getHighWaterMark(): Promise<number> {
-    if (this.cachedHighWater !== undefined) return this.cachedHighWater;
-
-    const localValue = Number(Zotero.Prefs.get(LAST_NUMBER_PREF, true) || 0);
-    const safeLocalValue =
-      Number.isSafeInteger(localValue) && localValue > 0 ? localValue : 0;
-    const itemsIncludingTrash = await this.getPersonalLibraryItems(true);
-    const scannedMaximum = this.analyze(itemsIncludingTrash).maximum;
-    this.cachedHighWater = Math.max(safeLocalValue, scannedMaximum);
-    this.rememberHighWaterMark(this.cachedHighWater);
-    return this.cachedHighWater;
-  }
-
-  private rememberHighWaterMark(value: number): void {
-    if (!Number.isSafeInteger(value) || value < 0) return;
-    this.cachedHighWater = Math.max(this.cachedHighWater || 0, value);
-    Zotero.Prefs.set(LAST_NUMBER_PREF, this.cachedHighWater, true);
+  private async getUsedRecordNumbers(
+    includeDeleted: boolean,
+  ): Promise<Set<number>> {
+    const items = await this.getPersonalLibraryItems(includeDeleted);
+    const used = new Set<number>();
+    for (const item of items) {
+      const inspection = inspectRecordNumber(item.getField("extra"));
+      if (inspection.status === "valid") used.add(inspection.value);
+    }
+    return used;
   }
 
   private async getPersonalLibraryItems(
@@ -296,4 +350,27 @@ export class RecordNumberManager {
 function compareByDateAddedThenID(a: Zotero.Item, b: Zotero.Item): number {
   const byDate = a.dateAdded.localeCompare(b.dateAdded);
   return byDate || a.id - b.id;
+}
+
+function compareForRenumbering(a: Zotero.Item, b: Zotero.Item): number {
+  const aNumber = inspectRecordNumber(a.getField("extra"));
+  const bNumber = inspectRecordNumber(b.getField("extra"));
+  if (aNumber.status === "valid" && bNumber.status === "valid") {
+    return (
+      aNumber.value - bNumber.value || compareByDateAddedThenID(a, b)
+    );
+  }
+  if (aNumber.status === "valid") return -1;
+  if (bNumber.status === "valid") return 1;
+  return compareByDateAddedThenID(a, b);
+}
+
+function countRenumberChanges(items: Zotero.Item[]): number {
+  return items.reduce((count, item, index) => {
+    const inspection = inspectRecordNumber(item.getField("extra"));
+    return count +
+      (inspection.status !== "valid" || inspection.value !== index + 1
+        ? 1
+        : 0);
+  }, 0);
 }

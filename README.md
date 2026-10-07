@@ -1,17 +1,19 @@
 # Zotero Record Number
 
-Version 1.0.5 supports Zotero 7.0 through Zotero 10.0.x.
+Version 1.0.6 supports Zotero 7.0 through Zotero 10.0.x.
 
-A small, offline Zotero plugin that provides EndNote-style persistent record
-numbers for top-level bibliographic items in **My Library**.
+A small, offline Zotero plugin that provides sequential record numbers for
+top-level bibliographic items in **My Library**.
 
 ## Behavior
 
 - Stores the value in the item's Extra field as `Record Number: 31`.
-- Existing numbers never change because of sorting, filtering, collections, or
-  deletion of another item.
-- New numbers use the highest number ever seen by this installation plus one.
-- Deleted numbers are not intentionally reused.
+- New items use the smallest available positive number; if there is no gap,
+  they use the current maximum plus one.
+- Items in the Zotero trash continue to reserve their numbers. Permanently
+  deleted numbers become available after the trash is emptied.
+- **Renumber all items consecutively…** rewrites the current library as `1…N`
+  in existing-number order. The command is blocked until the trash is empty.
 - Attachments and notes do not receive their own numbers.
 - Collections share one sequence because they contain references to items in
   My Library rather than separate copies.
@@ -36,6 +38,11 @@ Zotero sync.
 4. Run **Assign numbers to existing unnumbered items…** once.
 5. On the one primary computer, enable automatic assignment.
 6. Run **Check record numbers…** to verify the library.
+
+After permanently deleting a large mistaken import, use **Renumber all items
+consecutively…** if you want the remaining library compacted to `1…N`. This
+changes existing Record Numbers, so references to older numbers may no longer
+identify the same items.
 
 ## Privacy
 
@@ -62,6 +69,6 @@ The XPI is produced under `.scaffold/build/`.
 ## Origin and license
 
 This private build was developed after reviewing the Zotero One item-column
-implementation and its Zotero plugin scaffold. The numbering logic was
-rewritten to persist values instead of recalculating row positions. See
+implementation and its Zotero plugin scaffold. The numbering logic stores
+values in item metadata rather than using transient row positions. See
 `NOTICE.md` for attribution. Distributed under AGPL-3.0-or-later.

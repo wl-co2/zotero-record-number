@@ -56,6 +56,19 @@ export function recordNumberSortKey(value: number): string {
   return String(value).padStart(16, "0");
 }
 
+export function smallestAvailableRecordNumber(
+  values: Iterable<number>,
+): number {
+  const used = new Set<number>();
+  for (const value of values) {
+    if (Number.isSafeInteger(value) && value > 0) used.add(value);
+  }
+
+  let candidate = 1;
+  while (used.has(candidate)) candidate += 1;
+  return candidate;
+}
+
 function splitLines(value: string): string[] {
   return value === "" ? [] : value.split(/\r?\n/);
 }

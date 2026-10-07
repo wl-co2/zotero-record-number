@@ -47,6 +47,16 @@ export class RecordNumberUI {
     popup.appendChild(
       this.createMenuItem(
         doc,
+        this.text(
+          "将全部文献重新连续编号…",
+          "Renumber all items consecutively…",
+        ),
+        () => void this.renumberAllItems(win),
+      ),
+    );
+    popup.appendChild(
+      this.createMenuItem(
+        doc,
         this.text("检查编号…", "Check record numbers…"),
         () => void this.validateNumbers(win),
       ),
@@ -85,7 +95,6 @@ export class RecordNumberUI {
         this.refreshAutoItem(win);
         return;
       }
-      await this.manager.refreshHighWaterMark();
     }
 
     this.manager.setAutoAssignEnabled(!currentlyEnabled);
@@ -135,8 +144,8 @@ export class RecordNumberUI {
             `Assign numbers to ${count} unnumbered item(s), ordered by Date Added, starting at ${preview.nextNumber}.`,
           ),
           this.text(
-            "已有编号不会改变，删除造成的空号不会补齐。",
-            "Existing numbers will not change, and gaps caused by deletion will not be filled.",
+            "新文献优先使用最小空号；垃圾箱中的文献仍占用原编号。",
+            "New items use the smallest available number; items in the trash still reserve their numbers.",
           ),
           ...warningParts,
           "",
@@ -150,8 +159,8 @@ export class RecordNumberUI {
         win,
         this.text("编号完成", "Numbering complete"),
         this.text(
-          `已为 ${result.assigned} 篇文献分配编号。编号范围：${result.firstNumber ?? "—"}–${result.lastNumber ?? "—"}。`,
-          `Assigned numbers to ${result.assigned} item(s). Range: ${result.firstNumber ?? "—"}–${result.lastNumber ?? "—"}.`,
+          `已为 ${result.assigned} 篇文献分配编号。首个/末个新编号：${result.firstNumber ?? "—"}/${result.lastNumber ?? "—"}。`,
+          `Assigned numbers to ${result.assigned} item(s). First/last new number: ${result.firstNumber ?? "—"}/${result.lastNumber ?? "—"}.`,
         ),
       );
     } catch (error) {
@@ -160,8 +169,77 @@ export class RecordNumberUI {
         win,
         this.text("编号失败", "Numbering failed"),
         this.text(
-          "操作未完成。请查看 Zotero 错误报告；已经成功写入的编号不会被重新排列。",
-          "The operation did not complete. Check the Zotero error report; numbers already written will not be rearranged.",
+          "操作未完成。请查看 Zotero 错误报告。",
+          "The operation did not complete. Check the Zotero error report.",
+        ),
+      );
+    }
+  }
+
+  private async renumberAllItems(
+    win: _ZoteroTypes.MainWindow,
+  ): Promise<void> {
+    try {
+      const preview = await this.manager.getRenumberPreview();
+      if (preview.trashCount) {
+        this.alert(
+          win,
+          this.text("无法重新编号", "Cannot renumber"),
+          this.text(
+            `垃圾箱中还有 ${preview.trashCount} 篇文献。请先确认并清空垃圾箱，以免恢复条目时产生重复编号。`,
+            `${preview.trashCount} item(s) remain in the trash. Review and empty the trash first so restored items cannot create duplicate numbers.`,
+          ),
+        );
+        return;
+      }
+
+      if (!preview.changed) {
+        this.alert(
+          win,
+          this.text("记录编号", "Record Number"),
+          this.text(
+            `现有 ${preview.total} 篇文献已经连续编号为 1–${preview.total}。`,
+            `The ${preview.total} existing item(s) are already numbered consecutively from 1 to ${preview.total}.`,
+          ),
+        );
+        return;
+      }
+
+      const confirmed = Services.prompt.confirm(
+        win as unknown as mozIDOMWindowProxy,
+        this.text("重新连续编号", "Renumber consecutively"),
+        [
+          this.text(
+            `将按当前编号顺序，把 ${preview.total} 篇文献重新编号为 1–${preview.total}；预计修改 ${preview.changed} 篇。`,
+            `Renumber ${preview.total} item(s) as 1–${preview.total} in current number order; approximately ${preview.changed} item(s) will change.`,
+          ),
+          this.text(
+            "未编号或格式错误的条目将按加入 Zotero 的时间排在最后。旧笔记中记录的编号可能不再对应原文献。",
+            "Unnumbered or malformed items will be placed last by Date Added. Numbers recorded in older notes may no longer identify the same items.",
+          ),
+          "",
+          this.text("是否继续？", "Continue?"),
+        ].join("\n"),
+      );
+      if (!confirmed) return;
+
+      const result = await this.manager.renumberAllItems();
+      this.alert(
+        win,
+        this.text("重新编号完成", "Renumbering complete"),
+        this.text(
+          `现有 ${result.total} 篇文献已连续编号为 1–${result.total}，实际修改 ${result.changed} 篇。`,
+          `${result.total} item(s) are now numbered consecutively from 1 to ${result.total}; ${result.changed} item(s) changed.`,
+        ),
+      );
+    } catch (error) {
+      Zotero.logError(error as Error);
+      this.alert(
+        win,
+        this.text("重新编号失败", "Renumbering failed"),
+        this.text(
+          "操作未完成。请检查垃圾箱并查看 Zotero 错误报告。",
+          "The operation did not complete. Check the trash and the Zotero error report.",
         ),
       );
     }

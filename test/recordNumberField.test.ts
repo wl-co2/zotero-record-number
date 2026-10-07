@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   inspectRecordNumber,
   recordNumberSortKey,
+  smallestAvailableRecordNumber,
   withRecordNumber,
 } from "../src/recordNumberField.js";
 
@@ -56,4 +57,10 @@ test("sort keys preserve numeric order", () => {
     ),
     [1, 2, 11, 100],
   );
+});
+
+test("smallest available number fills the first gap", () => {
+  assert.equal(smallestAvailableRecordNumber([1, 2, 5, 6]), 3);
+  assert.equal(smallestAvailableRecordNumber([1, 2, 3]), 4);
+  assert.equal(smallestAvailableRecordNumber([2, 2, 0, -1]), 1);
 });
